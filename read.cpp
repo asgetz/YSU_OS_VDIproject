@@ -6,7 +6,8 @@
 
 /* 
  * File:   read.cpp
- * Author: getza
+ * Author: DeLucia, Nicholas
+ * 	   Getz,    Alex
  *
  * Created on January 31, 2018, 8:44 PM
  */
