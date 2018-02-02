@@ -5,9 +5,9 @@
  */
 
 /* 
- * File:   read.cpp
- * Author: DeLucia, Nicholas
- * 	   Getz,    Alex
+ * File:    read.cpp
+ * Authors: DeLucia, Nicholas
+ * 	    Getz,    Alex
  *
  * Created on January 31, 2018, 8:44 PM
  */

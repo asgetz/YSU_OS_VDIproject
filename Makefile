@@ -45,84 +45,105 @@
 
 
 # Environment 
-MKDIR=mkdir
-CP=cp
-CCADMIN=CCadmin
+##MKDIR=mkdir
+##CP=cp
+##CCADMIN=CCadmin
 
 
 # build
-build: .build-post
+##build: .build-post
 
-.build-pre:
+##.build-pre:
 # Add your pre 'build' code here...
 
-.build-post: .build-impl
+##.build-post: .build-impl
 # Add your post 'build' code here...
 
 
 # clean
-clean: .clean-post
+##clean: .clean-post
 
-.clean-pre:
+##.clean-pre:
 # Add your pre 'clean' code here...
 
-.clean-post: .clean-impl
+##.clean-post: .clean-impl
 # Add your post 'clean' code here...
 
 
 # clobber
-clobber: .clobber-post
+##clobber: .clobber-post
 
-.clobber-pre:
+##.clobber-pre:
 # Add your pre 'clobber' code here...
 
-.clobber-post: .clobber-impl
+##.clobber-post: .clobber-impl
 # Add your post 'clobber' code here...
 
 
 # all
-all: .all-post
+##all: .all-post
 
-.all-pre:
+##.all-pre:
 # Add your pre 'all' code here...
 
-.all-post: .all-impl
+##.all-post: .all-impl
 # Add your post 'all' code here...
 
 
 # build tests
-build-tests: .build-tests-post
+##build-tests: .build-tests-post
 
-.build-tests-pre:
+##.build-tests-pre:
 # Add your pre 'build-tests' code here...
 
-.build-tests-post: .build-tests-impl
+##.build-tests-post: .build-tests-impl
 # Add your post 'build-tests' code here...
 
 
 # run tests
-test: .test-post
+##test: .test-post
 
-.test-pre: build-tests
+##.test-pre: build-tests
 # Add your pre 'test' code here...
 
-.test-post: .test-impl
+##.test-post: .test-impl
 # Add your post 'test' code here...
 
 
 # help
-help: .help-post
+##help: .help-post
 
-.help-pre:
+##.help-pre:
 # Add your pre 'help' code here...
 
-.help-post: .help-impl
+##.help-post: .help-impl
 # Add your post 'help' code here...
 
 
 
 # include project implementation makefile
-include nbproject/Makefile-impl.mk
+##include nbproject/Makefile-impl.mk
 
 # include project make variables
-include nbproject/Makefile-variables.mk
+##include nbproject/Makefile-variables.mk
+
+
+
+################################################################################
+
+#####  Make without netbeans dependancy
+
+
+CC = g++
+CFLAGS = -Wall -Wpadded -fpack-struct=1 -g
+TARGET = read
+
+all: clean $(TARGET)
+$(TARGET): $(TARGET).cpp
+	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).cpp
+
+clean:
+	$(RM) $(TARGET)
+
+run:
+	./$(TARGET)

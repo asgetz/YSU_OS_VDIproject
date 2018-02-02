@@ -30,3 +30,23 @@
 *.exe
 *.out
 *.app
+
+# Project-specific
+a.out
+a.exe
+*.gch*
+read.exe
+Debian1.0.vdi
+Test-fixed-1k.vdi
+Test-dynamic-1k.vdi
+Test-fixed-4k.vdi
+*.exe
+
+## Unused/Undecided
+#read\.o
+#read
+#.vs/**
+#output
+#vdi-hex-trunc-start-v2
+#kstar
+#hex-fixed
