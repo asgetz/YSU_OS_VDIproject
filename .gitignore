@@ -41,6 +41,7 @@ Test-fixed-1k.vdi
 Test-dynamic-1k.vdi
 Test-fixed-4k.vdi
 *.exe
+*.save
 
 ## Unused/Undecided
 #read\.o
