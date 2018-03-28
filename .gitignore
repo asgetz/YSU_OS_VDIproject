@@ -45,7 +45,7 @@ Test-fixed-4k.vdi
 
 ## Unused/Undecided
 #read\.o
-#read
+read
 #.vs/**
 #output
 #vdi-hex-trunc-start-v2
