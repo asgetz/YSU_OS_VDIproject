@@ -15,6 +15,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdio.h>
+#include <fcntl.h>
+
+#include "Virtual.cpp"
+#include "ext2.cpp"
 
 using namespace std;
 
@@ -22,10 +26,29 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-    if(argc==1){
+    
+    if (argc==1){
         printf("ATTENTION: no path specified\n"
                 "You must specify: read <filename>\n");
     }
+    
+    char* path = argv [argc - 1];
+    
+    int file = open(path, O_RDONLY);
+    
+    // Put error catch here -Nick
+    
+    VBox vbox (file);
+    ext2 ext2FileSystem (&vbox);
+    ext2FileSystem.verify_super();
+    ext2FileSystem.dump_blocktables();
+    ext2FileSystem.verify_nodes();
+    
+    std::cout << std::endl;
+    
+    return 0;
+    
+    
 //THE LINE BELOW IS TO BE IMPLEMENTED LATER!!!
 //    char* pathspec = argv[argc-1] //Stores filename path reference into pointer variable
 /* EXCEPTION HANDLING WILL BE NEEDED FOR THE LINE ABOVE
