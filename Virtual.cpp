@@ -1,3 +1,11 @@
+/* 
+ * File:    read.cpp
+ * Authors: DeLucia, Nicholas
+ * 	    Getz,    Alex
+ *
+ * Created on March 24th, 2018, 5:32 PM
+ */
+
 #ifndef VIRTUAL
 #define VIRTUAL
 
@@ -17,7 +25,7 @@ VBox::VBox(int FileDescriptor)
     read(descriptor, iMap, head.blocks_in_hdd * sizeof(__s32));
 }
 
-void VBox::getByte (char* data, int startingByte, int bytes) {
+void VBox::getByte(char* data, int startingByte, int bytes) {
     
     int byteStorage = bytes;
     
