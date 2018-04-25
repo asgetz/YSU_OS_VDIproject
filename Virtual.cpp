@@ -6,66 +6,66 @@
  * Created on January 31, 2018, 8:44 PM
  */
 
-#include <cstdlib>
-#include <iostream>
-#include <stdio.h>
-#include <fcntl.h>
+#ifndef VIRTUAL
+#define VIRTUAL
 
-#include "Virtual.cpp"
-#include "ext2.cpp"
+#include "Virtual.hpp"
+#include <cstring>
+#include <unistd.h>
 
-using namespace std;
-
-/*
- * 
- */
-int main(int argc, char** argv) {
+VBox::VBox(int FileDescriptor)
+: descriptor(FileDescriptor) {
     
-    if (argc==1){
-        printf("ATTENTION: no path specified\n"
-                "You must specify: read <filename>\n");
+    lseek(descriptor, 0, SEEK_SET);
+    
+    read(descriptor, &head, sizeof(head));
+    
+    lseek(descriptor, head.offset_blocks, SEEK_SET);
+    iMap = new __s32[head.blocks_in_hdd];
+    read(descriptor, iMap, head.blocks_in_hdd * sizeof(__s32));
+}
+
+void VBox::getByte (char* data, int startingByte, int bytes) {
+    
+    int byteStorage = bytes;
+    
+    int startingVPage = startingByte >> 20;
+    
+    int activeBytes = 0;
+    
+    int activePage = startingVPage;
+    
+    while (byteStorage - activeBytes > 0) {
+        
+        int rPage = getPage(activePage);
+        int readBytes = byteStorage - activeBytes;
+        char* buffer = new char[readBytes];
+        
+        if (rPage == -1) {
+            memset(buffer, 0, readBytes);
+        }
+        else {
+            int offset = head.offset_data + startingByte + ((rPage - activePage) << 20);
+            
+            lseek(descriptor, offset, SEEK_SET);
+            read(descriptor, buffer, readBytes);
+        }
+        
+        for (int i = 0; i <= readBytes; i++) {
+            data[activeBytes + i] = buffer[i];
+        }
+        
+        activeBytes += readBytes;
+        activePage++;
+        
     }
     
-    char* path = argv [argc - 1];
+    lseek(descriptor, 0, SEEK_SET);
     
-    int file = open(path, O_RDONLY);
-    
-    // Put error catch here -Nick
-    
-    VBox vbox (file);
-    ext2 ext2FileSystem (&vbox);
-    ext2FileSystem.verify_super();
-    ext2FileSystem.dump_blocktables();
-    ext2FileSystem.verify_nodes();
-    
-    std::cout << std::endl;
-    
-    return 0;
-    
-    
-//THE LINE BELOW IS TO BE IMPLEMENTED LATER!!!
-//    char* pathspec = argv[argc-1] //Stores filename path reference into pointer variable
-/* EXCEPTION HANDLING WILL BE NEEDED FOR THE LINE ABOVE
-   if(bad condition){throw a function call to "handle" it};
-   The function handling it will probably do nothing and will be placed in
-   header file read.hpp. This will suppress any difficulties with &&argv
-*/
-    
-    /* TODO_LIST:
-     * 
-     * Open the file at specified by our char* pathspec
-     * Store output into a variable: it will be an integer.
-     * Create a class object of our struct class (whatever we name it) and
-     *         pass the integer with the call
-     * 
-     * From there, the class file that contains our struct will do the rest.
-     * This file will just run the overhead for all the grunt files doing
-     *         the actual work.
-     */
-    
-    
-    
-    cout << "test" << endl;
-    
-    return 0;
 }
+
+int VBox::getPage(int page) {
+    return image_map[page];
+}
+
+#endif
