@@ -47,7 +47,6 @@ class VBox
 		   That means that there must be a variable for each valuable & unique piece of information
 		   within the VDI header, and that variables will be needed for certain chunks of
 		   information deemed less valuable or for chunks of info that is useless when separated.
-
 		   NOTE TO SELF: the structure is described in detail in the VirtualBox.com forum post
 		*/
 

@@ -39,4 +39,4 @@ static inline __u64 ext2_image_size(void *ext2_sb)
 		le32_to_cpup((__le32 *)(p + EXT2_SB_BSIZE_OFFSET));
 }
 
-#endif	/* _LINUX_EXT2_FS_H */
+#endif /* _LINUX_EXT2_FS_H */
