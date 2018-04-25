@@ -3,7 +3,7 @@
 
 #include "ext2_fs.h"
 #include "Virtual.hpp"
-#include "mbr.hpp"
+#include "mbr.h"
 
 class ext2 {
     
