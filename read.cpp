@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
     
     VBox vbox (file);
     ext2 ext2FileSystem (&vbox);
-    ext2FileSystem.verify_super();
-    ext2FileSystem.dump_blocktables();
-    ext2FileSystem.verify_nodes();
+    ext2FileSystem.verifySuper();
+    ext2FileSystem.bGroupTableDump();
+    ext2FileSystem.verifyNodes();
     
     std::cout << std::endl;
     

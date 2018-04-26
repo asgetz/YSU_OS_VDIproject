@@ -25,7 +25,7 @@ VBox::VBox(int FileDescriptor)
     read(descriptor, iMap, head.blocks_in_hdd * sizeof(__s32));
 }
 
-void VBox::getByte (char* data, int startingByte, int bytes) {
+void VBox::getByte(char* data, int startingByte, int bytes) {
     
     int byteStorage = bytes;
     
@@ -65,7 +65,7 @@ void VBox::getByte (char* data, int startingByte, int bytes) {
 }
 
 int VBox::getPage(int page) {
-    return image_map[page];
+    return iMap[page];
 }
 
 #endif

@@ -5,44 +5,13 @@
 
 class VBox
 {
-    public:
-        VBox(int FileDescriptor);
-	void get(/*Arguments*/);
-	void set(/*Arguments*/);
-
-	struct vdiHeader head; //Declaring the struct, but not defining it.
-
-	/////////////////////////////// IGNORE BELOW FOR NOW
-        /** Default destructor */
-        //virtual ~Virtual();
-
-        /** Copy constructor
-         *  \param other Object to copy from
-         */
-        //Virtual(const Virtual& other);
-
-        /** Assignment operator
-         *  \param other Object to assign from
-         *  \return A reference to this
-         */
-        //Virtual& operator=(const Virtual& other);
-
-        /** Access VDIheader
-         * \return The current value of VDIheader
-         */
-        //struct __attribute__((packed)) GetVDIheader() { return VDIheader; }
-        /** Set VDIheader
-         * \param val New value to set
-         */
-        //void SetVDIheader(struct __attribute__((packed)) val) { VDIheader = val; }
-
     protected:
 
     private:
 	int descriptor;
-	__s32* image_map;
+	__s32* iMap;
 
-        struct __attribute__((packed)) vdiHeader; {  //!< Member variable "VDIheader"
+        struct __attribute__((packed)) vdiHeader {  //!< Member variable "VDIheader"
 		/* This VirtualHeader will mirror the structure of the VDI header byte-for-byte.
 		   That means that there must be a variable for each valuable & unique piece of information
 		   within the VDI header, and that variables will be needed for certain chunks of
@@ -55,7 +24,7 @@ class VBox
 		__u32 version;
 		__u32 header_size;
 		__u32 image_type;
-		char misc[0x104] // 104 bytes of miscellaneous data
+		char misc[0x104]; // 104 bytes of miscellaneous data
 		__u32 offset_blocks;
 		__u32 offset_data;
 		__u32 cylinders;
@@ -71,7 +40,18 @@ class VBox
 		__u32 uuid_vdi[4];
 		__u32 uuid_link[4];
 		__u32 uuid_parent[4];
-	}
+                
+	};
+        
+        public:
+        VBox(int FileDescriptor);
+	void get(/*Arguments*/);
+	void set(/*Arguments*/);
+        
+        void getByte(char* data, int startingByte, int bytes);
+        int getPage(int page);
+
+	struct vdiHeader head; //Declaring the struct, but not defining it.
 };
 
 #endif // VIRTUAL_H

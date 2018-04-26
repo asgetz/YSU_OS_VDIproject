@@ -8,7 +8,7 @@
 class ext2 {
     
 public:
-    ext2(VBox* Box);
+    ext2(VBox* vBox);
     
     char* getBlock(int blockNum);
     char* getBlock(int blockNum, int byte);
@@ -28,7 +28,7 @@ private:
     const static int EXT2_SUPER_OFFSET = 1024;
     struct bootingSect mbr;
     unsigned int ext2StartingSectByte;
-    struct ext2_super super;
+    struct ext2_super_block super;
     struct ext2_group_desc* blockDescTable;
     unsigned int gCount;
     unsigned int sizeBlockDescTable;

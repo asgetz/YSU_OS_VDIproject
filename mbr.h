@@ -11,7 +11,7 @@ struct PartitionEntry {
     type,
     unused1[3];
   __u32
-    firstSector,
+    startingSector,
     nSectors;
 };
 
@@ -22,11 +22,11 @@ struct PartitionEntry {
 // 516 bytes, which is 4 too many.
 //
 // note: you want entry 0 in partitionTable.
-struct __attribute__((packed)) BootSector {
+struct __attribute__((packed)) bootingSect {
   __u8
     unused0[0x1be];
   PartitionEntry
-    partitionTable[4];
+    partTable[4];
   __u16
     magic;
 };
