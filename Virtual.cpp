@@ -21,6 +21,7 @@ VBox::VBox(int FileDescriptor)
     read(descriptor, &head, sizeof(head));
     
     lseek(descriptor, head.offset_blocks, SEEK_SET);
+    
     iMap = new __s32[head.blocks_in_hdd];
     read(descriptor, iMap, head.blocks_in_hdd * sizeof(__s32));
 }

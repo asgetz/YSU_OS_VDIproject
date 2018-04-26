@@ -36,7 +36,12 @@ private:
     
 };
 
+// Error handling
 class iNodeAllocationError {};
+class UndefinedPartitionError {};
+class FalseSectorError {};
+class FalseSuperError {};
+
 
 #define EXT2_S_IFSOCK   0xC000
 #define EXT2_S_IFLNK    0xA000
