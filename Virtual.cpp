@@ -65,8 +65,17 @@ void VBox::getByte(char* data, int startingByte, int bytes) {
     
 }
 
+void VBox::setByte(char* data, int startingByte, int bytes) {
+    
+}
+
 int VBox::getPage(int page) {
     return iMap[page];
+}
+
+void VBox::setPage(int page, int insert) {
+    iMap[page] = insert;
+    return;
 }
 
 #endif

@@ -14,6 +14,10 @@ public:
     char* getBlock(int blockNum, int byte);
     char* getBlock(int blockNum, int byte, int offset);
     
+    void setBlock();
+    void setBlock();
+    void setBlock();
+    
     struct ext2_inode getNode(unsigned long long node);
     struct ext2_dir_entry_2 getDir(unsigned long block, unsigned long offset);
     

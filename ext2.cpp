@@ -83,6 +83,18 @@ char* ext2::getBlock(int blockNum, int byte, int offset) {
     return data;
 }
 
+void ext2::setBlock(int blockNum, char* data) {
+    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
+}
+
+void ext2::setBlock(int blockNum, int byte, char* data) {
+    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, byte);
+}
+
+void ext2::setBlock(int blockNum, int byte, int offset, char* data) {
+    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte + offset, byte);
+}
+
 struct ext2_inode ext2::getNode(unsigned long long node) {
     int nodeBlockGroup = node / super.s_inodes_per_group;
     unsigned long long nodesInGroup = node % super.s_inodes_per_group;

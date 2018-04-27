@@ -41,7 +41,9 @@ int main(int argc, char** argv) {
     char* path = argv [argc - 1];
     int file = open(path, O_RDONLY);
     
-    // Put error catch here -Nick
+    if (file == -1) {
+        throw fileUnreadable();
+    }
     
     VBox vbox (file);
     ext2 ext2FileSystem (&vbox);

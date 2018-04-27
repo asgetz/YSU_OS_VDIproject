@@ -45,11 +45,11 @@ class VBox
         
         public:
         VBox(int FileDescriptor);
-	void get(/*Arguments*/);
-	void set(/*Arguments*/);
         
         void getByte(char* data, int startingByte, int bytes);
+        void setByte(char* data, int startingByte, int bytes);
         int getPage(int page);
+        void setPage(int page, int insert);
 
 	struct vdiHeader head; //Declaring the struct, but not defining it.
 };
