@@ -66,7 +66,23 @@ void VBox::getByte(char* data, int startingByte, int bytes) {
 }
 
 void VBox::setByte(char* data, int startingByte, int bytes) {
+    int byteStorage = bytes;
+    int activePage = startingByte >> 20;
+    int activeBytes = 0;
     
+    while (byteStorage - activeBytes > 0) {
+        
+        int readBytes = byteStorage - activeBytes;
+        
+        for (int i = 0; i <= readBytes; i++) {
+            setPage(activePage + i) = data[i];
+        }
+        
+        activeBytes += readBytes;
+        activePage++;
+    }
+    
+    return;
 }
 
 int VBox::getPage(int page) {
