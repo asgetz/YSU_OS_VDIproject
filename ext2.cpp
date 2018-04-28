@@ -9,16 +9,24 @@
 #ifndef EXT2
 #define EXT2
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <cstring>
 #include <stdio.h>
-#include <assert.h>
-#include <vector>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+//#include <assert.h>
 
 #include "ext2.hpp"
 #include "ext2_fs.h"
 #include "Virtual.cpp"
 
-//#define BLOCK_OFFSET(block) (EXT2_SUPER_OFFSET+(block-1)*block_size)
+#define BASE_OFFSET 1024   
+#define BLOCK_OFFSET(block) (BASE_OFFSET+(block-1)*block_size)
+
+static unsigned int block_size = 0;
 
 ext2::ext2(VBox* vBox) : Box(vBox) {
     int array = sizeof(bootingSect);
@@ -26,6 +34,12 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     Box->getByte(data, 0, array);
     std::memcpy(&mbr, data, array);
     delete data;
+    
+    
+    struct ext2_inode inode;
+    int fd = Box->descriptor;
+    
+    
     //////////////////////// MBR SET ////////////////////////
     
     int ext2_part = -1;
@@ -33,12 +47,13 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     for(int part=0; part<=MBR_PARTITIONS; part++){
         if (mbr.partTable[part].type == 0x83) {ext2_part = part;}
     }
-    if(ext2_part==-1){throw UndefinedPartitionError();}
-//    else {printf("\n\nPassed partition check!\n");}
+    if(ext2_part==-1){
+//        fprintf(stderr,"Not a valid partition\n");
+//        exit(1);
+    }
     /////// LOCATION OF EXT2 FILESYSTEM ACQUIRED /////////////////////////////
     
-    if(mbr.magic!=MAGIC_NUM){throw FalseSectorError();}
-//    else {printf("\n\nPassed Magic number check!\n");}
+    if(mbr.magic!=MAGIC_NUM){}
     ///////////////////// MAGIC NUM CHECK PASSED
     
 
@@ -57,6 +72,8 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
 //    else {printf("\n\nPassed Superblock magic number check!\n");}
     /////////////////// SUPERBLOCK CHECK PASSED ///////////////////////
     
+    block_size = 1024 << super.s_log_block_size;
+    
     
     super.s_log_block_size>0? blockGroupDescLocation=1:
         blockGroupDescLocation=2;
@@ -69,9 +86,14 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     blockDescTable = new struct ext2_group_desc[gCount];
     //////////// BLOCK DESCRIPTOR TABLE LOADED //////////////////////////
     
-    data = getBlock(blockGroupDescLocation, sizeBlockDescTable);
+
+    data = new char[sizeBlockDescTable];
+    Box->getByte(data, (blockGroupDescLocation * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, sizeBlockDescTable);
     std::memcpy(blockDescTable, data, sizeBlockDescTable);
     delete data;
+    
+    read_inode(fd, 2, blockDescTable, &inode);
+    read_dir(fd, &inode, blockDescTable);
 }
 
 
@@ -82,23 +104,23 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
 
 
 
-char* ext2::getBlock(int blockNum) {
-    char* data = new char[1024 << super.s_log_block_size];
-    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
-    return data;
-}
-
-char* ext2::getBlock(int blockNum, int byte) {
-    char* data = new char[byte];
-    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, byte);
-    return data;
-}
-
-char* ext2::getBlock(int blockNum, int byte, int offset) {
-    char* data = new char[byte];
-    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte + offset, byte);
-    return data;
-}
+//char* ext2::getBlock(int blockNum) {
+//    char* data = new char[1024 << super.s_log_block_size];
+//    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
+//    return data;
+//}
+//
+//char* ext2::getBlock(int blockNum, int byte) {
+//    char* data = new char[byte];
+//    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, byte);
+//    return data;
+//}
+//
+//char* ext2::getBlock(int blockNum, int byte, int offset) {
+//    char* data = new char[byte];
+//    Box->getByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte + offset, byte);
+//    return data;
+//}
 
 //void ext2::setBlock(int blockNum, char* data) {
 //    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
@@ -113,72 +135,78 @@ char* ext2::getBlock(int blockNum, int byte, int offset) {
 //}
 
 ////////////////// THIS IS WHERE KRAMER'S ALGORITHM STARTS TO COME IT ////////
-struct ext2_inode ext2::getNode(unsigned long long node) {
-    int nodeBlockGroup = node / super.s_inodes_per_group;
-    unsigned long long nodesInGroup = node % super.s_inodes_per_group;
-    
-    
-    bool* nodeMap;
-    nodeMap = (bool*) getBlock(blockDescTable[nodeBlockGroup].bg_inode_bitmap, super.s_inodes_per_group / 8);
-    
-    
-    int test = nodeMap[nodesInGroup / 8];
-    test = (test >> nodesInGroup) & 0x1;
-    
-    if(node==0||test==0){printf("iNode Unallocated!\n");
-    throw iNodeAllocationError();}
-    
-    char* data = getBlock(blockDescTable[nodeBlockGroup].bg_inode_table, sizeof(ext2_inode), (super.s_inode_size * (nodesInGroup - 1)));
-    
-    struct ext2_inode iNode;
-    std::memcpy(&iNode, data, sizeof(ext2_inode));
-    
-    
-    return iNode;
-}
+//struct ext2_inode ext2::getNode(unsigned long long node) {
+//    int nodeBlockGroup = node / super.s_inodes_per_group;
+//    unsigned long long nodesInGroup = node % super.s_inodes_per_group;
+//    
+//    
+//    bool* nodeMap;
+//    nodeMap = (bool*) getBlock(blockDescTable[nodeBlockGroup].bg_inode_bitmap, super.s_inodes_per_group / 8);
+//    
+//    
+//    int test = nodeMap[nodesInGroup / 8];
+//    test = (test >> nodesInGroup) & 0x1;
+//    
+//    if(node==0||test==0){printf("iNode Unallocated!\n");
+//    throw iNodeAllocationError();}
+//    
+//    char* data = getBlock(blockDescTable[nodeBlockGroup].bg_inode_table, sizeof(ext2_inode), (super.s_inode_size * (nodesInGroup - 1)));
+//    
+//    struct ext2_inode iNode;
+//    std::memcpy(&iNode, data, sizeof(ext2_inode));
+//    
+//    
+//    return iNode;
+//}
 
-//static 
-//void read_inode(int fd, int inode_no, const struct ext2_group_desc *group, struct ext2_inode *inode)
-//{
-//	lseek(fd, BLOCK_OFFSET(group->bg_inode_table)+(inode_no-1)*sizeof(struct ext2_inode), 
-//	      SEEK_SET);
-//	read(fd, inode, sizeof(struct ext2_inode));
-//} /* read_inode() */
-//
-//
-//static void read_dir(int fd, const struct ext2_inode *inode, const struct ext2_group_desc *group)
-//{
-//	void *block;
-//
-//	if (S_ISDIR(inode->i_mode)) {
-//		struct ext2_dir_entry_2 *entry;
-//		unsigned int size = 0;
-//
-//		if ((block = malloc(block_size)) == NULL) { /* allocate memory for the data block */
-//			fprintf(stderr, "Memory error\n");
-//			close(fd);
-//			exit(1);
-//		}
-//
-//		lseek(fd, BLOCK_OFFSET(inode->i_block[0]), SEEK_SET);
-//		read(fd, block, block_size);                /* read block from disk*/
-//
-//		entry = (struct ext2_dir_entry_2 *) block;  /* first entry in the directory */
-//                /* Notice that the list may be terminated with a NULL
-//                   entry (entry->inode == NULL)*/
-//		while((size < inode->i_size) && entry->inode) {
-//			char file_name[EXT2_NAME_LEN+1];
-//			memcpy(file_name, entry->name, entry->name_len);
-//			file_name[entry->name_len] = 0;     /* append null character to the file name */
-//			printf("%10u %s\n", entry->inode, file_name);
-//			entry = (void*) entry + entry->rec_len;
-//			size += entry->rec_len;
-//		}
-//
-//		free(block);
-////                copy = (ext2_super_block *) getBlock(i * super.s_blocks_per_group, sizeof(ext2_super_block), offset);///////
-//	}
-//} /* read_dir() */
+void ext2::read_inode(int fd, int inode_no, const struct ext2_group_desc *group, struct ext2_inode *inode)
+{
+    lseek(fd, BLOCK_OFFSET(group->bg_inode_table)+(inode_no-1)*sizeof(struct ext2_inode), 
+          SEEK_SET);
+    read(fd, inode, sizeof(struct ext2_inode));
+} /* read_inode() */
+
+
+void ext2::read_dir(int fd, const struct ext2_inode *inode, const struct ext2_group_desc *group)
+{
+    void *block;
+
+    if (S_ISDIR(inode->i_mode)) {
+        struct ext2_dir_entry_2 *entry;
+        unsigned int size = 0;
+
+        if ((block = malloc(block_size)) == NULL) { /* allocate memory for the data block */
+            fprintf(stderr, "Memory error\n");
+            close(fd);
+            exit(1);
+        }
+
+        lseek(fd, BLOCK_OFFSET(inode->i_block[0]), SEEK_SET);
+        read(fd, block, block_size);                /* read block from disk*/
+
+        entry = (struct ext2_dir_entry_2 *) block;  /* first entry in the directory */
+        /* Notice that the list may be terminated with a NULL
+           entry (entry->inode == NULL)*/
+        while((size < inode->i_size) && entry->inode) {
+            char file_name[EXT2_NAME_LEN+1];
+            memcpy(file_name, entry->name, entry->name_len);
+            file_name[entry->name_len] = 0;     /* append null character to the file name */
+            printf("%10u %s\n", entry->inode, file_name);
+            entry = entry + entry->rec_len;
+            size += entry->rec_len;
+        }
+
+        free(block);
+//                copy = (ext2_super_block *) getBlock(i * super.s_blocks_per_group, sizeof(ext2_super_block), offset);///////
+    }
+} /* read_dir() */
+
+
+
+
+
+
+
 
 //int ext2::verifyNodes(unsigned long long nodeNum) {
 //    try {

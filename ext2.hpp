@@ -5,24 +5,26 @@
 #include "Virtual.hpp"
 #include "mbr.h"
 
+
+
 class ext2 {
     
 public:
     ext2(VBox* vBox);
     
-    char* getBlock(int blockNum);
-    char* getBlock(int blockNum, int byte);
-    char* getBlock(int blockNum, int byte, int offset);
+//    char* getBlock(int blockNum);
+//    char* getBlock(int blockNum, int byte);
+//    char* getBlock(int blockNum, int byte, int offset);
     
 //    void setBlock();
 //    void setBlock();
 //    void setBlock();
     
-    struct ext2_inode getNode(unsigned long long node);
+//    struct ext2_inode getNode(unsigned long long node);
     struct ext2_dir_entry_2 getDir(unsigned long block, unsigned long offset);
     
-//    static void read_dir(int, const struct ext2_inode*, const struct ext2_group_desc*);
-//    static void read_inode(int, int, const struct ext2_group_desc*, struct ext2_inode*);
+    void read_dir(int, const struct ext2_inode*, const struct ext2_group_desc*);
+    void read_inode(int, int, const struct ext2_group_desc*, struct ext2_inode*);
     
 //    void verifySuper();
 //    void bGroupTableDump();
@@ -31,6 +33,7 @@ public:
 protected:
     
 private:
+//    #define BLOCK_OFFSET(block) (EXT2_SUPER_OFFSET+(block-1)*block_size)
     VBox* Box;
     const static int EXT2_SUPER_OFFSET = 1024;
     struct bootingSect mbr;

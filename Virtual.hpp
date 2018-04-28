@@ -8,7 +8,7 @@ class VBox
     protected:
 
     private:
-	int descriptor;
+	
 	__s32* iMap;
 
         struct __attribute__((packed)) vdiHeader {  //!< Member variable "VDIheader"
@@ -45,6 +45,7 @@ class VBox
         
         public:
         VBox(int FileDescriptor);
+        int descriptor;
         
         void getByte(char* data, int startingByte, int bytes);
 //        void setByte(char* data, int startingByte, int bytes);
