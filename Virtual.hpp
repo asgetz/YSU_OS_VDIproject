@@ -1,15 +1,14 @@
 #ifndef VIRTUAL_H
 #define VIRTUAL_H
 
+// Files to include
 #include "ext2_fs.h"
 
 class VBox
 {
-    protected:
-
     private:
-	int descriptor;
-	__s32* iMap;
+	int name; // Stores the file's name
+	__s32* iMap; // Stores the pages
 
         struct __attribute__((packed)) vdiHeader {  //!< Member variable "VDIheader"
             /* This VirtualHeader will mirror the structure of the VDI header byte-for-byte.
@@ -43,15 +42,15 @@ class VBox
                 
 	};
         
+        // Put public below private so the compiler knows that vdiHeader exists
         public:
-        VBox(int FileDescriptor);
+        VBox(int FileDescriptor); // Constructor for the class
         
+        // Simple functions to handle the page and byte reads
         void getByte(char* data, int startingByte, int bytes);
-//        void setByte(char* data, int startingByte, int bytes);
-        int getPage(int page);
-//        void setPage(int page, int insert);
+        int getPage(int pageToRead);
 
-	struct vdiHeader head; //Declaring the struct, but not defining it.
+	struct vdiHeader head; // Struct is defined above but declared here
 };
 
-#endif // VIRTUAL_H
+#endif
