@@ -14,16 +14,19 @@ public:
     char* getBlock(int blockNum, int byte);
     char* getBlock(int blockNum, int byte, int offset);
     
-    void setBlock();
-    void setBlock();
-    void setBlock();
+//    void setBlock();
+//    void setBlock();
+//    void setBlock();
     
     struct ext2_inode getNode(unsigned long long node);
     struct ext2_dir_entry_2 getDir(unsigned long block, unsigned long offset);
     
-    void verifySuper();
-    void bGroupTableDump();
-    int verifyNodes(unsigned long long = 2);
+//    static void read_dir(int, const struct ext2_inode*, const struct ext2_group_desc*);
+//    static void read_inode(int, int, const struct ext2_group_desc*, struct ext2_inode*);
+    
+//    void verifySuper();
+//    void bGroupTableDump();
+//    int verifyNodes(unsigned long long = 2);
     
 protected:
     

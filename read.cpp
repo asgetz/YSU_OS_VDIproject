@@ -46,10 +46,13 @@ int main(int argc, char** argv) {
     }
     
     VBox vbox (file);
+    
+    
+    
     ext2 ext2FileSystem (&vbox);
-    ext2FileSystem.verifySuper();
-    ext2FileSystem.bGroupTableDump();
-    ext2FileSystem.verifyNodes();
+//    ext2FileSystem.verifySuper();
+//    ext2FileSystem.bGroupTableDump();
+//    ext2FileSystem.verifyNodes();
     
     std::cout << std::endl;
     return 0;

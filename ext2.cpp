@@ -18,12 +18,15 @@
 #include "ext2_fs.h"
 #include "Virtual.cpp"
 
+//#define BLOCK_OFFSET(block) (EXT2_SUPER_OFFSET+(block-1)*block_size)
+
 ext2::ext2(VBox* vBox) : Box(vBox) {
     int array = sizeof(bootingSect);
     char* data = new char[array];
     Box->getByte(data, 0, array);
     std::memcpy(&mbr, data, array);
     delete data;
+    //////////////////////// MBR SET ////////////////////////
     
     int ext2_part = -1;
     
@@ -32,13 +35,16 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     }
     if(ext2_part==-1){throw UndefinedPartitionError();}
 //    else {printf("\n\nPassed partition check!\n");}
-    assert(ext2_part>=0 && ext2_part<=4);
+    /////// LOCATION OF EXT2 FILESYSTEM ACQUIRED /////////////////////////////
+    
     if(mbr.magic!=MAGIC_NUM){throw FalseSectorError();}
 //    else {printf("\n\nPassed Magic number check!\n");}
+    ///////////////////// MAGIC NUM CHECK PASSED
     
 
     
     ext2StartingSectByte = mbr.partTable[ext2_part].startingSector * Box->head.sector_size;
+    ///////////////// PARTITION TABLE LOADED ///////////////////////////
     
     
     data = new char[sizeof(ext2_super_block)];
@@ -49,6 +55,8 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     
     if(super.s_magic!=EXT2_SUPER_MAGIC){throw FalseSuperError();}
 //    else {printf("\n\nPassed Superblock magic number check!\n");}
+    /////////////////// SUPERBLOCK CHECK PASSED ///////////////////////
+    
     
     super.s_log_block_size>0? blockGroupDescLocation=1:
         blockGroupDescLocation=2;
@@ -59,11 +67,20 @@ ext2::ext2(VBox* vBox) : Box(vBox) {
     
     
     blockDescTable = new struct ext2_group_desc[gCount];
+    //////////// BLOCK DESCRIPTOR TABLE LOADED //////////////////////////
     
     data = getBlock(blockGroupDescLocation, sizeBlockDescTable);
     std::memcpy(blockDescTable, data, sizeBlockDescTable);
     delete data;
 }
+
+
+
+
+
+
+
+
 
 char* ext2::getBlock(int blockNum) {
     char* data = new char[1024 << super.s_log_block_size];
@@ -83,18 +100,19 @@ char* ext2::getBlock(int blockNum, int byte, int offset) {
     return data;
 }
 
-void ext2::setBlock(int blockNum, char* data) {
-    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
-}
+//void ext2::setBlock(int blockNum, char* data) {
+//    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, (1024 << super.s_log_block_size));
+//}
 
-void ext2::setBlock(int blockNum, int byte, char* data) {
-    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, byte);
-}
+//void ext2::setBlock(int blockNum, int byte, char* data) {
+//    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte, byte);
+//}
 
-void ext2::setBlock(int blockNum, int byte, int offset, char* data) {
-    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte + offset, byte);
-}
+//void ext2::setBlock(int blockNum, int byte, int offset, char* data) {
+//    Box->setByte(data, (blockNum * ( 1024 << super.s_log_block_size)) + ext2StartingSectByte + offset, byte);
+//}
 
+////////////////// THIS IS WHERE KRAMER'S ALGORITHM STARTS TO COME IT ////////
 struct ext2_inode ext2::getNode(unsigned long long node) {
     int nodeBlockGroup = node / super.s_inodes_per_group;
     unsigned long long nodesInGroup = node % super.s_inodes_per_group;
@@ -115,155 +133,104 @@ struct ext2_inode ext2::getNode(unsigned long long node) {
     struct ext2_inode iNode;
     std::memcpy(&iNode, data, sizeof(ext2_inode));
     
+    
     return iNode;
-    
 }
 
-bool isPowerof357(unsigned int number);
-void ext2::verifySuper() {
-    //take the number of block groups and then read in the superblock copies.
+//static 
+//void read_inode(int fd, int inode_no, const struct ext2_group_desc *group, struct ext2_inode *inode)
+//{
+//	lseek(fd, BLOCK_OFFSET(group->bg_inode_table)+(inode_no-1)*sizeof(struct ext2_inode), 
+//	      SEEK_SET);
+//	read(fd, inode, sizeof(struct ext2_inode));
+//} /* read_inode() */
+//
+//
+//static void read_dir(int fd, const struct ext2_inode *inode, const struct ext2_group_desc *group)
+//{
+//	void *block;
+//
+//	if (S_ISDIR(inode->i_mode)) {
+//		struct ext2_dir_entry_2 *entry;
+//		unsigned int size = 0;
+//
+//		if ((block = malloc(block_size)) == NULL) { /* allocate memory for the data block */
+//			fprintf(stderr, "Memory error\n");
+//			close(fd);
+//			exit(1);
+//		}
+//
+//		lseek(fd, BLOCK_OFFSET(inode->i_block[0]), SEEK_SET);
+//		read(fd, block, block_size);                /* read block from disk*/
+//
+//		entry = (struct ext2_dir_entry_2 *) block;  /* first entry in the directory */
+//                /* Notice that the list may be terminated with a NULL
+//                   entry (entry->inode == NULL)*/
+//		while((size < inode->i_size) && entry->inode) {
+//			char file_name[EXT2_NAME_LEN+1];
+//			memcpy(file_name, entry->name, entry->name_len);
+//			file_name[entry->name_len] = 0;     /* append null character to the file name */
+//			printf("%10u %s\n", entry->inode, file_name);
+//			entry = (void*) entry + entry->rec_len;
+//			size += entry->rec_len;
+//		}
+//
+//		free(block);
+////                copy = (ext2_super_block *) getBlock(i * super.s_blocks_per_group, sizeof(ext2_super_block), offset);///////
+//	}
+//} /* read_dir() */
 
-	printf("Block    Inodes    Blocks    Reserved     First     Log Block   Log Frag   Blocks Per\n"
-				 "Group    Count     Count     Blocks     Data Block     Size         Size        Group\n"
-			   "-------------------------------------------------------------------------------------\n");
+//int ext2::verifyNodes(unsigned long long nodeNum) {
+//    try {
+//        struct ext2_inode iNode = this->getNode(nodeNum);
+////        printf("Starting from here: ");
+//        
+//        if (iNode.i_mode & EXT2_S_IFREG) {
+//            printf("inode: %u\n"
+//                "Size: %u\n"
+//                "links: %u\n",
+//                iNode.i_mode,
+//                iNode.i_size,
+//                iNode.i_links_count);
+//            return 0;
+//        }
+//        
+//        if (iNode.i_mode & EXT2_S_IFDIR) {
+//            for (size_t i = 0; i < EXT2_NDIR_BLOCKS; i++) {
+//                if (iNode.i_block[i] != 0) {
+//                    this->getDir(iNode.i_block[i], 0);
+//                }
+//            }
+//        }
+//    }
 
-
-    for (unsigned int i = 0; i < gCount; i++){
-        if (isPowerof357(i) || i == 0){
-            ext2_super_block *copy;
-            unsigned int offset = 0;
-            if(i==0 || blockGroupDescLocation-1)
-//                offset = EXT2_SUPER_BLOCK_OFFSET;
-                offset = EXT2_SUPER_OFFSET;
-
-            copy = (ext2_super_block *) getBlock(i * super.s_blocks_per_group, sizeof(ext2_super_block), offset);
-
-            printf("%5u %9u %9u %11u %12u %11u %10u %12u\n",
-                i,
-                copy->s_inodes_count,
-                copy->s_blocks_count,
-                copy->s_r_blocks_count,
-                copy->s_first_data_block,
-                copy->s_log_block_size,
-                copy->s_log_cluster_size,
-                copy->s_blocks_per_group);
-            delete copy;
-        }
-    }
-
-    printf("\n\n"
-        "Block    Frags Per    Magic     Minor Revision    Creator    Revision    First    Inode\n"
-        "Group    Group                  Level             OS         Level       Inode    Size \n"
-        "---------------------------------------------------------------------------------------\n");
-
-    for (unsigned int i = 0; i < gCount; i++){
-        if (isPowerof357(i) || i == 0){
-            ext2_super_block *copy;
-            unsigned int offset = 0;
-            if(i==0 || blockGroupDescLocation-1){
-//                offset = EXT2_SUPER_BLOCK_OFFSET;
-                offset = EXT2_SUPER_OFFSET;
-            }
-
-            copy = (ext2_super_block *) getBlock(i*super.s_blocks_per_group, sizeof(ext2_super_block), offset);
-
-            printf("%5u %12u %8u %18u %10u %11u %8u %8u\n",
-                i,
-                copy->s_clusters_per_group,
-                copy->s_magic,
-                copy->s_minor_rev_level,
-                copy->s_creator_os,
-                copy->s_rev_level,
-                copy->s_first_ino,
-                copy->s_inode_size);
-
-            delete copy;
-        }
-    }printf("\n\n");return;
-}
-
-void ext2::bGroupTableDump() {
-    printf("Group    Block     Inode      Inode    Free      Free        Used\n"
-         "         Bitmap    Bitmap     Table    Blocks    Inodes      Dirs\n"
-         "-----------------------------------------------------------------\n");
-	for (unsigned int i = 0; i < gCount; i++){
-            printf("%5u %9u %9u %9u %9u %9u %9u\n",
-                i,
-                blockDescTable[i].bg_block_bitmap,
-                blockDescTable[i].bg_inode_bitmap,
-                blockDescTable[i].bg_inode_table,
-                blockDescTable[i].bg_free_blocks_count,
-                blockDescTable[i].bg_free_inodes_count,
-                blockDescTable[i].bg_used_dirs_count);
-	}printf("\n\n");return;
-}
-
-int ext2::verifyNodes(unsigned long long nodeNum) {
-    try {
-        struct ext2_inode iNode = this->getNode(nodeNum);
-//        printf("Starting from here: ");
-        
-        if (iNode.i_mode & EXT2_S_IFREG) {
-            printf("inode: %u\n"
-                "Size: %u\n"
-                "links: %u\n",
-                iNode.i_mode,
-                iNode.i_size,
-                iNode.i_links_count);
-            return 0;
-        }
-        
-        if (iNode.i_mode & EXT2_S_IFDIR) {
-            for (size_t i = 0; i < EXT2_NDIR_BLOCKS; i++) {
-                if (iNode.i_block[i] != 0) {
-                    this->getDir(iNode.i_block[i], 0);
-                }
-            }
-        }
-    }
-    catch (iNodeAllocationError) {
-        printf("The iNode has not been allocated.");
-        return 1;
-    }
-    
-    return 0;
-}
-
-struct ext2_dir_entry_2 ext2::getDir(unsigned long block, unsigned long offset) {
-    
-    std::vector<struct ext2_dir_entry_2> entries;
-    struct ext2_dir_entry_2 test;
-    unsigned int totalLength = 0;
-    
-    std::memcpy(&test, this->getBlock(block, *(this->getBlock(block, 2, 4)), 0), *(this->getBlock(block, 2, 4)));
-    
-    printf("Block: 0x%x\nlength: %x\nFileType: %x\nName: %s\n", block, test.name_len,test.file_type, test.name);
-    
-    totalLength += test.rec_len;
-    entries.push_back(test);
-    bool addEntries = totalLength - (1024 << super.s_log_block_size);
-    while (addEntries) {
-        char* firstLength = this->getBlock(block, 2, 4 + totalLength);
-        unsigned int secondLength = (unsigned int) *firstLength;
-        
-        if (secondLength >= (1024 << super.s_log_block_size)) {break;}
-        
-        printf("length2: %u\n", secondLength);
-        delete firstLength;
-        std::memcpy(&test, this->getBlock(block, secondLength, totalLength), secondLength);
-        
-//        printf("%u\n", totalLength);
-        totalLength += test.rec_len;
-        addEntries = totalLength - (1024 << super.s_log_block_size);
-        entries.push_back(test);
-    }return test;
-}
-
-bool isPowerof357(unsigned int number)
-{
-	//3^19, 5^19, and 7^19 respectively. Avoids the pesky while loop by seeing if max unsigned int is divisible evenly.
-	return (number != 0 && 3486784401u % number == 0) || (number != 0 && 95367431640625u % number == 0) || (number != 0 && 79792266297612001u % number == 0);
-}
-
-
+//struct ext2_dir_entry_2 ext2::getDir(unsigned long block, unsigned long offset) {
+//    
+//    std::vector<struct ext2_dir_entry_2> entries;
+//    struct ext2_dir_entry_2 test;
+//    unsigned int totalLength = 0;
+//    
+//    std::memcpy(&test, this->getBlock(block, *(this->getBlock(block, 2, 4)), 0), *(this->getBlock(block, 2, 4)));
+//    
+//    printf("Block: 0x%x\nlength: %x\nFileType: %x\nName: %s\n", block, test.name_len,test.file_type, test.name);
+//    
+//    totalLength += test.rec_len;
+//    entries.push_back(test);
+//    bool addEntries = totalLength - (1024 << super.s_log_block_size);
+//    while (addEntries) {
+//        char* firstLength = this->getBlock(block, 2, 4 + totalLength);
+//        unsigned int secondLength = (unsigned int) *firstLength;
+//        
+//        if (secondLength >= (1024 << super.s_log_block_size)) {break;}
+//        
+//        printf("length2: %u\n", secondLength);
+//        delete firstLength;
+//        std::memcpy(&test, this->getBlock(block, secondLength, totalLength), secondLength);
+//        
+////        printf("%u\n", totalLength);
+//        totalLength += test.rec_len;
+//        addEntries = totalLength - (1024 << super.s_log_block_size);
+//        entries.push_back(test);
+//    }return test;
+//}
 #endif
