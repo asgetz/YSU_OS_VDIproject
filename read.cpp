@@ -1,9 +1,8 @@
 /*
  * File:    read.cpp
- * Authors: DeLucia, Nicholas
- * 	    Getz,    Alex
+ * Authors: Marcum, Chase
+ * 	        Getz,    Alex
  *
- * Created on January 31, 2018, 8:44 PM
  */
 
 // Headers to include

@@ -1,9 +1,8 @@
 /*
  * File:    ext2.cpp
- * Authors: DeLucia, Nicholas
- * 	    Getz,    Alex
+ * Authors: Marcum, Chase
+ * 	        Getz,    Alex
  *
- * Created on April 10th, 2018, 6:47 PM
  */
 
 #ifndef EXT2
@@ -29,11 +28,6 @@
 
 static unsigned int block_size = 0;
 
-
-
-/* ext2_fs.h SUPER_MAGIC_NUM = 0xEF53 */
-/* Magic number given by Kramer is 0xaa55 ??? */
-/* Determine this mixup? */
 
 /**FILE SYSTEM SET UP
  *
