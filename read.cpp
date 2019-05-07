@@ -1,4 +1,4 @@
-/* 
+/*
  * File:    read.cpp
  * Authors: DeLucia, Nicholas
  * 	    Getz,    Alex
@@ -19,7 +19,6 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    
     // Check to make sure that the file name is valid and tell the user if it isn't
     if (argc==1){
         printf("ERROR: You did not specify a valid file name.\n");
@@ -28,22 +27,26 @@ int main(int argc, char** argv) {
         printf("Please make sure that that is not the case before trying again.\n");
         return 0;
     }
-    
     char* path = argv [argc - 1]; // Store the path to where the file is located
     int readFile = open(path, O_RDWR); // Store the file specified where the path goes
-    
-    
-    // If the file is not a valid file, throw the respective error
-    if (readFile < 0) {
-        throw fileUnreadable();
-    }
-    
+    if (readFile < 0) {throw fileUnreadable();} // If the file is not a valid file, throw the respective error
+
     VBox Box (readFile); // Construct a VBox file using the file to read
-    
+
     ext2 ext2Reader (&Box); // Construct the ext2 file structure that we'll be using
-    
-    printf("Thank you for using our VDI reader.\n"); // Print out to confirm end of the program
-    
+
+    ext2Reader.verifySuper();
+    printf("Super block integrity: CHECKED\n\n");
+
+    ext2Reader.verify_bGroupTable();
+    printf("Block Group Descriptor Table integrity: CHECKED\n\n");
+
+    ext2Reader.verifyNodes();
+    printf("I-Node integrity: CHECKED\n\n");
+
+
+
+    printf("Done.\n"); // Print out to confirm end of the program
     return 0;
-    
+
 }

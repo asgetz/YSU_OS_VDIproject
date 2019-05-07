@@ -8,32 +8,22 @@
 
 
 class ext2 {
-    
+
 public:
     ext2(VBox* vBox);
-    
-//    char* getBlock(int blockNum);
-//    char* getBlock(int blockNum, int byte);
-//    char* getBlock(int blockNum, int byte, int offset);
-    
-//    void setBlock();
-//    void setBlock();
-//    void setBlock();
-    
-//    struct ext2_inode getNode(unsigned long long node);
-    struct ext2_dir_entry_2 getDir(unsigned long block, unsigned long offset);
-    
-    void read_dir(int, const struct ext2_inode*, const struct ext2_group_desc*);
-    void read_inode(int, int, const struct ext2_group_desc*, struct ext2_inode*);
-    
-//    void verifySuper();
-//    void bGroupTableDump();
-//    int verifyNodes(unsigned long long = 2);
-    
-protected:
-    
+
+    char* blockRetrieve(int bNum);
+    char* blockRetrieve(int bNum, int byte);
+    char* blockRetrieve(int bNum, int byte, int offset);
+
+    struct ext2_inode nodeRetrieve(unsigned long long node);
+    struct ext2_dir_entry_2 dirRetrieve(unsigned long block, unsigned long offset);
+
+    void verifySuper();
+    void verify_bGroupTable();
+    int verifyNodes(unsigned long long = 2);
+
 private:
-//    #define BLOCK_OFFSET(block) (EXT2_SUPER_OFFSET+(block-1)*block_size)
     VBox* Box;
     const static int EXT2_SUPER_OFFSET = 1024;
     struct bootingSect mbr;
@@ -43,14 +33,13 @@ private:
     unsigned int gCount;
     unsigned int sizeBlockDescTable;
     long long blockGroupDescLocation;
-    
+
 };
 
-// Error handling
-class iNodeAllocationError {};
-class UndefinedPartitionError {};
-class FalseSectorError {};
-class FalseSuperError {};
+class AllocationError {};
+class PartitionError {};
+class SectorError {};
+class SuperError {};
 
 
 #define EXT2_S_IFSOCK   0xC000
